@@ -1,26 +1,58 @@
 #!/usr/bin/python3
-""" Write a script markdown2html.py that takes an argument 2 strings:
-First argument is the name of the Markdown file
-Second argument is the output file name """
-import re
-import hashlib
+"""some script to start"""
+
 import sys
 import os
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         sys.stderr.write("Usage: ./markdown2html.py README.md README.html\n")
-        exit(1)
-    if not os.path.exists(sys.argv[1]):
-        sys.stderr.write("Missing " + sys.argv[1] + "\n")
-        exit(1)
+        sys.exit(1)
 
-    with open(sys.argv[1]) as r:
-        with open(sys.argv[2], 'w') as w:
-            change_status = False
-            ordered_status = False
-            paragraph = False
-            if paragraph:
-                w.write('</p>\n')
+    if not os.path.isfile(sys.argv[1]):
+        sys.stderr.write(f"Missing {sys.argv[1]}\n")
+        sys.exit(1)
 
-    exit(0)
+    with open(sys.argv[1], 'r') as file:
+        lines = file.readlines()
+
+    lines_in_html = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+
+        # headings
+        if line.startswith("#"):
+            level = line.count("#")
+            text = line.strip("#").strip()
+            html = f"<h{level}>{text}</h{level}>\n"
+            lines_in_html.append(html)
+            i += 1
+
+        # unordered lists
+        elif line.startswith("-"):
+            lines_in_html.append("<ul>\n")
+            while i < len(lines) and lines[i].strip().startswith("-"):
+                text = lines[i].strip("-").strip()
+                html = f"<li>{text}</li>\n"
+                lines_in_html.append(html)
+                i += 1
+            lines_in_html.append("</ul>\n")
+
+        # ordered lists
+        elif line.startswith("*"):
+            lines_in_html.append("<ol>\n")
+            while i < len(lines) and lines[i].strip().startswith("*"):
+                text = lines[i].strip("*").strip()
+                html = f"<li>{text}</li>\n"
+                lines_in_html.append(html)
+                i += 1
+            lines_in_html.append("</ol>\n")
+
+        else:
+            lines_in_html.append(f"{line}")
+            i += 1
+
+    with open(sys.argv[2], 'w') as file:
+        file.writelines(lines_in_html)
